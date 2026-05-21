@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 7. Contact Form Simulation (Premium Feedback UX)
+    // 7. Contact Form Real Integration (Email + WhatsApp)
     const contactForm = document.getElementById('contact-form');
     const toast = document.getElementById('toast-notification');
 
@@ -134,6 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = contactForm.querySelector('.form-submit-btn');
             const originalText = submitBtn.innerHTML;
             
+            // Ambil data dari form
+            const name = document.getElementById('form-name').value;
+            const email = document.getElementById('form-email').value;
+            const subject = document.getElementById('form-subject').value;
+            const message = document.getElementById('form-message').value;
+            
             // Disable button and show sending feedback state
             submitBtn.disabled = true;
             submitBtn.innerHTML = `
@@ -141,23 +147,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 Mengirim pesan...
             `;
 
-            // Simulate server network request latency
-            setTimeout(() => {
-                // Show floating custom toast
+            // 1. Kirim Email melalui FormSubmit API (menggunakan AJAX)
+            fetch("https://formsubmit.co/ajax/Raffi4779.pplg1@smkprestasiprima.sch.id", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    subject: subject,
+                    message: message,
+                    _subject: `Pesan Portofolio Baru dari ${name}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Tampilkan floating custom toast
                 toast.classList.add('show');
                 
-                // Clear inputs
+                // Bersihkan inputs
                 contactForm.reset();
                 
-                // Restore button
+                // Kembalikan tombol seperti semula
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
                 
-                // Hide toast after 4 seconds
+                // Sembunyikan toast setelah 4 detik
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 4000);
-            }, 1800);
+
+                // 2. Buat URL WhatsApp & Buka di Tab Baru
+                const waPhone = "6285691000097";
+                const waText = `Halo Raffi, nama saya ${name}.\n\nSaya menghubungi Anda terkait: *${subject}*.\n\nPesan:\n${message}\n\nEmail saya: ${email}`;
+                const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(waText)}`;
+                
+                // Buka tab WhatsApp
+                window.open(waUrl, '_blank');
+            })
+            .catch(error => {
+                console.log(error);
+                alert("Maaf, terjadi kesalahan saat mengirim email. Anda akan dialihkan ke WhatsApp.");
+                
+                // Fallback: Jika email gagal, tetap buka WhatsApp
+                const waPhone = "6285691000097";
+                const waText = `Halo Raffi, nama saya ${name}.\n\nSaya menghubungi Anda terkait: *${subject}*.\n\nPesan:\n${message}`;
+                const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(waText)}`;
+                window.open(waUrl, '_blank');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
         });
     }
 });
